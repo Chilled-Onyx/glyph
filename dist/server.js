@@ -13,23 +13,10 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const http_1 = require("http");
+const cache_1 = __importDefault(require("./cache"));
 const request_1 = __importDefault(require("./request"));
 const getIcon_1 = __importDefault(require("./getIcon"));
-const cache = {};
-const getCache = (domain) => {
-    if (undefined === cache[domain]) {
-        return null;
-    }
-    ``;
-    const icon = cache[domain];
-    const now = (new Date()).getTime();
-    const expires = (new Date(icon.expires)).getTime();
-    if (now > expires) {
-        delete cache[domain];
-        return null;
-    }
-    return icon;
-};
+const cache = new cache_1.default();
 const faviconRegex = /<link[^>]+rel=.(icon|shortcut icon|alternate icon)[^>]+>/ig;
 const hrefMatch = /href=['"]([^>]+)['"]/;
 const requestHandler = (request, response) => __awaiter(void 0, void 0, void 0, function* () {
@@ -39,7 +26,7 @@ const requestHandler = (request, response) => __awaiter(void 0, void 0, void 0, 
             response.end();
             return;
         }
-        const cacheIcon = getCache(request.domain);
+        const cacheIcon = cache.get(request.domain);
         if (null !== cacheIcon && request.allowsCache) {
             const etagMatches = request.getHeader('if-none-match') === cacheIcon.etag;
             const notModified = (new Date(request.getHeader('if-modified-since', Date.now().toString()))).getTime() < (new Date(cacheIcon.lastModified)).getTime();
@@ -76,7 +63,7 @@ const requestHandler = (request, response) => __awaiter(void 0, void 0, void 0, 
         }
         try {
             const icon = yield (0, getIcon_1.default)(iconLocation.href);
-            cache[request.domain] = icon;
+            cache.set(request.domain, icon);
             response.writeHead(200, {
                 'content-type': icon.type,
                 'content-length': icon.content.length,

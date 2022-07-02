@@ -1,25 +1,10 @@
 import type Glyph from './types';
 import {createServer, ServerResponse, Server, RequestListener} from 'http';
+import Cache from './cache';
 import Request from './request';
 import getIcon from './getIcon';
 
-const cache: {[domain: string]: Glyph.Icon} = {};
-const getCache: (domain: string) => Glyph.Icon | null = (domain: string): Glyph.Icon | null => {
-  if(undefined === cache[domain]) {
-    return null;
-  }
-
-  const icon: Glyph.Icon = cache[domain];
-  const now: number = (new Date()).getTime();
-  const expires: number = (new Date(icon.expires)).getTime();
-
-  if(now > expires) {
-    delete cache[domain];
-    return null;
-  }
-
-  return icon;
-};
+const cache = new Cache();
 
 const faviconRegex: RegExp = /<link[^>]+rel=.(icon|shortcut icon|alternate icon)[^>]+>/ig;
 const hrefMatch: RegExp = /href=['"]([^>]+)['"]/;
@@ -32,7 +17,7 @@ const requestHandler = async (request: Glyph.Request, response: ServerResponse) 
       return;
     }
 
-    const cacheIcon: Glyph.Icon | null = getCache(request.domain);
+    const cacheIcon: Glyph.Icon | null = cache.get(request.domain);
     if(null !== cacheIcon && request.allowsCache) {
       const etagMatches: boolean = request.getHeader('if-none-match') === cacheIcon.etag;
       const notModified: boolean = (new Date(request.getHeader('if-modified-since', Date.now().toString()))).getTime() < (new Date(cacheIcon.lastModified)).getTime();
@@ -74,7 +59,7 @@ const requestHandler = async (request: Glyph.Request, response: ServerResponse) 
 
     try {
       const icon: Glyph.Icon = await getIcon(iconLocation.href);
-      cache[request.domain] = icon;
+      cache.set(request.domain, icon);
 
       response.writeHead(200, {
         'content-type': icon.type,
