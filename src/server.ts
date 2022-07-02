@@ -7,7 +7,7 @@ const cache: {[domain: string]: Glyph.Icon} = {};
 const getCache: (domain: string) => Glyph.Icon | null = (domain: string): Glyph.Icon | null => {
   if(undefined === cache[domain]) {
     return null;
-  }``
+  }
 
   const icon: Glyph.Icon = cache[domain];
   const now: number = (new Date()).getTime();
