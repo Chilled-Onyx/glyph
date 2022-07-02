@@ -1,0 +1,46 @@
+{
+  "name": "glyph",
+  "version": "1.0.0",
+  "description": "FavIcon service",
+  "main": "index.js",
+  "scripts": {
+    "start": "node --no-warnings --experimental-fetch dist/server.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:Chilled-Onyx/glyph.git"
+  },
+  "keywords": [],
+  "author": {
+    "name": "Christian South",
+    "email": "t1eb4n@gmail.com",
+    "url": "https://github.com/t1eb4n"
+  },
+  "nodemonConfig": {
+    "ignore": [
+      "tests/*",
+      "build/*",
+      "dist/*",
+      "storage/*",
+      "tmp/*",
+      "node_modules/*"
+    ],
+    "ext": "js, json, ts",
+    "exec": "clear && npx tsc && npm start"
+  },
+  "license": "AGPL-3.0-or-later",
+  "devDependencies": {
+    "@types/jest": "^27.5.1",
+    "@typescript-eslint/eslint-plugin": "^5.27.1",
+    "@typescript-eslint/parser": "^5.27.1",
+    "eslint": "^8.17.0",
+    "eslint-plugin-jest": "^26.5.3",
+    "figlet": "^1.5.2",
+    "jest": "^28.0.3",
+    "nodemon": "^2.0.16",
+    "ts-jest": "^28.0.3",
+    "ts-node": "^10.8.1",
+    "typescript": "^4.7.3"
+  }
+}
