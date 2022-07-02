@@ -1,18 +1,11 @@
+import type Glyph from './types';
+
 import { get as getHTTP, IncomingMessage }  from 'http';
 import { get as getHTTPS } from 'https';
 import { Transform } from 'stream';
 import { createHash } from 'crypto';
 
-export type Icon = {
-  lastModified: string;
-  type: string;
-  href: string;
-  content: string;
-  expires: string;
-  etag: string;
-};
-
-const getIcon = (url: string): Promise<Icon> => {
+const getIcon = (url: string): Promise<Glyph.Icon> => {
   return new Promise((resolve, reject) => {
     const get = url.startsWith('https') ? getHTTPS : getHTTP;
 
