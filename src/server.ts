@@ -52,26 +52,28 @@ const requestHandler = async (request: Glyph.Request, response: ServerResponse) 
       }
     } catch {
       /** Domain doesn't exist or isn't serving http **/
+      console.log('Sending 404 - 1');
       response.statusCode = 404;
-      response.end();
-      return;
+      return response.end();
     }
 
-    try {
-      const icon: Glyph.Icon = await getIcon(iconLocation.href);
-      cache.set(request.domain, icon);
+    const icon: Glyph.Icon | null = await getIcon(iconLocation.href);
 
-      response.writeHead(200, {
-        'content-type': icon.type,
-        'content-length': icon.content.length,
-        'expires': icon.expires,
-        'last-modified': icon.lastModified,
-        'etag': icon.etag
-      });
-      response.end(icon.content);
-    } catch {
-      /** 404 on the icon url itself - serve default icon **/
+    if(null === icon) {
+      response.statusCode = 404;
+      return response.end();
     }
+
+    cache.set(request.domain, icon);
+
+    response.writeHead(200, {
+      'content-type': icon.type,
+      'content-length': icon.content.length,
+      'expires': icon.expires,
+      'last-modified': icon.lastModified,
+      'etag': icon.etag
+    });
+    response.end(icon.content);
   });
 };
 

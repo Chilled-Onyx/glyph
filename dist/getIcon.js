@@ -25,18 +25,21 @@ const getIcon = (url) => {
                     return;
                 }
                 const iconContent = testStream.read();
+                if (undefined !== response.statusCode && response.statusCode >= 400 && response.statusCode <= 599) {
+                    resolve(null);
+                }
                 const etag = (0, crypto_1.createHash)('md5').update(iconContent).digest('hex');
                 resolve({
                     expires: response.headers['expires'] || twelveHoursFromNow().toUTCString(),
                     lastModified: response.headers['last-modified'] || (new Date()).toUTCString(),
                     type: response.headers['content-type'] || 'image/png',
                     href: url,
-                    content: iconContent,
+                    content: iconContent.toString(),
                     etag
                 });
             }));
         })
-            .on('error', reject);
+            .on('error', () => resolve(null));
     });
 };
 class BodyStream extends stream_1.Transform {

@@ -57,25 +57,24 @@ const requestHandler = (request, response) => __awaiter(void 0, void 0, void 0, 
         }
         catch (_a) {
             /** Domain doesn't exist or isn't serving http **/
+            console.log('Sending 404 - 1');
             response.statusCode = 404;
-            response.end();
-            return;
+            return response.end();
         }
-        try {
-            const icon = yield (0, getIcon_1.default)(iconLocation.href);
-            cache.set(request.domain, icon);
-            response.writeHead(200, {
-                'content-type': icon.type,
-                'content-length': icon.content.length,
-                'expires': icon.expires,
-                'last-modified': icon.lastModified,
-                'etag': icon.etag
-            });
-            response.end(icon.content);
+        const icon = yield (0, getIcon_1.default)(iconLocation.href);
+        if (null === icon) {
+            response.statusCode = 404;
+            return response.end();
         }
-        catch (_b) {
-            /** 404 on the icon url itself - serve default icon **/
-        }
+        cache.set(request.domain, icon);
+        response.writeHead(200, {
+            'content-type': icon.type,
+            'content-length': icon.content.length,
+            'expires': icon.expires,
+            'last-modified': icon.lastModified,
+            'etag': icon.etag
+        });
+        response.end(icon.content);
     }));
 });
 const server = (0, http_1.createServer)({ IncomingMessage: request_1.default }, requestHandler);

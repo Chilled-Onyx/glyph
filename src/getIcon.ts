@@ -5,7 +5,7 @@ import { get as getHTTPS } from 'https';
 import { Transform } from 'stream';
 import { createHash } from 'crypto';
 
-const getIcon = (url: string): Promise<Glyph.Icon> => {
+const getIcon = (url: string): Promise<Glyph.Icon | null> => {
   return new Promise((resolve, reject) => {
     const get = url.startsWith('https') ? getHTTPS : getHTTP;
 
@@ -20,7 +20,12 @@ const getIcon = (url: string): Promise<Glyph.Icon> => {
           return;
         }
 
-        const iconContent: string = testStream.read();
+        const iconContent: Buffer = testStream.read();
+
+        if(undefined !== response.statusCode && response.statusCode >= 400 && response.statusCode <= 599) {
+          resolve(null);
+        }
+
         const etag: string        = createHash('md5').update(iconContent).digest('hex');
 
         resolve({
@@ -28,14 +33,13 @@ const getIcon = (url: string): Promise<Glyph.Icon> => {
           lastModified: response.headers['last-modified'] || (new Date()).toUTCString(),
           type: response.headers['content-type'] || 'image/png',
           href: url,
-          content: iconContent,
+          content: iconContent.toString(),
           etag
         });
       });
     })
-    .on('error', reject);
+    .on('error', () => resolve(null));
   });
-
 };
 
 class BodyStream extends Transform {
