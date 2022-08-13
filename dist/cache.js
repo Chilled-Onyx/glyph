@@ -1,28 +1,36 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-class Cache {
+class Cache extends Map {
     constructor() {
-        this._cache = {};
-        setInterval(() => {
-            let expired = 0;
-            console.log('Checking for cache expiration.');
-            Object.keys(this._cache).forEach((domain) => {
-                const icon = this._cache[domain];
-                const now = (new Date()).getTime();
-                const expires = (new Date(icon.expires)).getTime();
-                if (now > expires) {
-                    expired++;
-                    delete this._cache[domain];
-                }
-            });
-            console.log(`Expired ${expired} icons.`);
-        }, 1000 * 60);
+        super();
+        this.startCacheClear();
     }
-    get(domain) {
-        return this._cache[domain] || null;
+    _clearCache() {
+        const now = (new Date()).getTime();
+        let expired = 0;
+        console.log('Checking for cache expiration.');
+        [...this].forEach((cacheEntry) => {
+            const [domain, icon] = cacheEntry;
+            const expires = (new Date(icon.expires)).getTime();
+            if (now > expires) {
+                expired++;
+                this.delete(domain);
+            }
+        });
+        console.log(`Expired ${expired} icons.`);
     }
-    set(domain, icon) {
-        this._cache[domain] = icon;
+    startCacheClear() {
+        if (undefined !== this._cacheClearInterval) {
+            return this;
+        }
+        this._cacheClearInterval = setInterval(this._clearCache.bind(this), 1000 * 60);
+        return this;
+    }
+    stopClearCache() {
+        if (undefined === this._cacheClearInterval) {
+            return this;
+        }
+        clearInterval(this._cacheClearInterval);
         return this;
     }
 }

@@ -27,7 +27,7 @@ const requestHandler = (request, response) => __awaiter(void 0, void 0, void 0, 
             return;
         }
         const cacheIcon = cache.get(request.domain);
-        if (null !== cacheIcon && request.allowsCache) {
+        if (undefined !== cacheIcon && request.allowsCache) {
             const etagMatches = request.getHeader('if-none-match') === cacheIcon.etag;
             const notModified = (new Date(request.getHeader('if-modified-since', Date.now().toString()))).getTime() < (new Date(cacheIcon.lastModified)).getTime();
             if (etagMatches || notModified) {

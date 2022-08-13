@@ -10,10 +10,7 @@ declare namespace Glyph {
     etag: string;
   };
 
-  interface Cache {
-    get: (domain: string) => Glyph.Icon | null;
-    set: (domain: string, icon: Glyph.Icon) => Glyph.Cache;
-  }
+  type Cache = Map<string, Glyph.Icon>;
 
   class Request extends IncomingMessage {
     public allowsCache: boolean;

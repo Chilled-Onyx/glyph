@@ -17,8 +17,8 @@ const requestHandler = async (request: Glyph.Request, response: ServerResponse) 
       return;
     }
 
-    const cacheIcon: Glyph.Icon | null = cache.get(request.domain);
-    if(null !== cacheIcon && request.allowsCache) {
+    const cacheIcon: Glyph.Icon | undefined = cache.get(request.domain);
+    if(undefined !== cacheIcon && request.allowsCache) {
       const etagMatches: boolean = request.getHeader('if-none-match') === cacheIcon.etag;
       const notModified: boolean = (new Date(request.getHeader('if-modified-since', Date.now().toString()))).getTime() < (new Date(cacheIcon.lastModified)).getTime();
 
