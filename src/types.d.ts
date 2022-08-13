@@ -5,7 +5,7 @@ declare namespace Glyph {
     lastModified: string;
     type: string;
     href: string;
-    content: string;
+    content: Blob;
     expires: string;
     etag: string;
   };

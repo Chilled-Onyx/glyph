@@ -29,12 +29,12 @@ const requestHandler = async (request: Glyph.Request, response: ServerResponse) 
 
       response.writeHead(200, {
         'content-type': cacheIcon.type,
-        'content-length': cacheIcon.content.length,
+        'content-length': cacheIcon.content.size,
         'expires': cacheIcon.expires,
         'last-modified': cacheIcon.lastModified,
         'etag': cacheIcon.etag
       });
-      return response.end(cacheIcon.content);
+      return response.end(Buffer.from(await cacheIcon.content.arrayBuffer()));
     }
 
     let iconLocation: URL = new URL(`http://${request.domain}/favicon.ico`);
@@ -68,15 +68,16 @@ const requestHandler = async (request: Glyph.Request, response: ServerResponse) 
 
     response.writeHead(200, {
       'content-type': icon.type,
-      'content-length': icon.content.length,
+      'content-length': icon.content.size,
       'expires': icon.expires,
       'last-modified': icon.lastModified,
       'etag': icon.etag
     });
-    response.end(icon.content);
+    response.end(Buffer.from(await icon.content.arrayBuffer()));
   });
 };
 
 const server: Server = createServer({IncomingMessage: Request}, requestHandler as unknown as RequestListener);
 
 server.listen(80);
+console.log('Server started');

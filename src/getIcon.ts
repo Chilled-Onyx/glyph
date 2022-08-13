@@ -1,52 +1,22 @@
 import type Glyph from './types';
 
-import { get as getHTTP, IncomingMessage }  from 'http';
-import { get as getHTTPS } from 'https';
-import { Transform } from 'stream';
 import { createHash } from 'crypto';
 
-const getIcon = (url: string): Promise<Glyph.Icon | null> => {
-  return new Promise((resolve, reject) => {
-    const get = url.startsWith('https') ? getHTTPS : getHTTP;
+const getIcon2 = async (url: string) => {
+  const response      = await fetch(url);
+  const iconContent   = await response.blob();
+  const etag: string  = createHash('md5').update(URL.createObjectURL(iconContent)).digest('hex');
 
-    get(url, (response: IncomingMessage) => {
-      let testStream: BodyStream = new BodyStream();
+  const icon: Glyph.Icon = {
+    expires: response.headers.get('expires') || twelveHoursFromNow().toUTCString(),
+    lastModified: response.headers.get('last-modified') || (new Date()).toUTCString(),
+    type: iconContent.type,
+    href: url,
+    content: iconContent,
+    etag
+  };
 
-      response.pipe(testStream);
-
-      response.on('end', async () => {
-        if(undefined !== response.statusCode && response.statusCode >= 300 && response.statusCode <= 399) {
-          resolve(await getIcon(response.headers['location']!));
-          return;
-        }
-
-        const iconContent: Buffer = testStream.read();
-
-        if(undefined !== response.statusCode && response.statusCode >= 400 && response.statusCode <= 599) {
-          resolve(null);
-        }
-
-        const etag: string        = createHash('md5').update(iconContent).digest('hex');
-
-        resolve({
-          expires: response.headers['expires'] || twelveHoursFromNow().toUTCString(),
-          lastModified: response.headers['last-modified'] || (new Date()).toUTCString(),
-          type: response.headers['content-type'] || 'image/png',
-          href: url,
-          content: iconContent.toString(),
-          etag
-        });
-      });
-    })
-    .on('error', () => resolve(null));
-  });
-};
-
-class BodyStream extends Transform {
-  public _write(chunk: Buffer, encoding: BufferEncoding, cb:(error?: Error | null) => void) {
-    this.push(chunk);
-    cb();
-  }
+  return icon;
 }
 
 const twelveHoursFromNow: () => Date = (): Date => {
@@ -55,4 +25,4 @@ const twelveHoursFromNow: () => Date = (): Date => {
   return date;
 };
 
-export default getIcon;
+export default getIcon2;

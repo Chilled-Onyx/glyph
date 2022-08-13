@@ -36,12 +36,12 @@ const requestHandler = (request, response) => __awaiter(void 0, void 0, void 0, 
             }
             response.writeHead(200, {
                 'content-type': cacheIcon.type,
-                'content-length': cacheIcon.content.length,
+                'content-length': cacheIcon.content.size,
                 'expires': cacheIcon.expires,
                 'last-modified': cacheIcon.lastModified,
                 'etag': cacheIcon.etag
             });
-            return response.end(cacheIcon.content);
+            return response.end(Buffer.from(yield cacheIcon.content.arrayBuffer()));
         }
         let iconLocation = new URL(`http://${request.domain}/favicon.ico`);
         try {
@@ -69,13 +69,14 @@ const requestHandler = (request, response) => __awaiter(void 0, void 0, void 0, 
         cache.set(request.domain, icon);
         response.writeHead(200, {
             'content-type': icon.type,
-            'content-length': icon.content.length,
+            'content-length': icon.content.size,
             'expires': icon.expires,
             'last-modified': icon.lastModified,
             'etag': icon.etag
         });
-        response.end(icon.content);
+        response.end(Buffer.from(yield icon.content.arrayBuffer()));
     }));
 });
 const server = (0, http_1.createServer)({ IncomingMessage: request_1.default }, requestHandler);
 server.listen(80);
+console.log('Server started');

@@ -9,48 +9,24 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const http_1 = require("http");
-const https_1 = require("https");
-const stream_1 = require("stream");
 const crypto_1 = require("crypto");
-const getIcon = (url) => {
-    return new Promise((resolve, reject) => {
-        const get = url.startsWith('https') ? https_1.get : http_1.get;
-        get(url, (response) => {
-            let testStream = new BodyStream();
-            response.pipe(testStream);
-            response.on('end', () => __awaiter(void 0, void 0, void 0, function* () {
-                if (undefined !== response.statusCode && response.statusCode >= 300 && response.statusCode <= 399) {
-                    resolve(yield getIcon(response.headers['location']));
-                    return;
-                }
-                const iconContent = testStream.read();
-                if (undefined !== response.statusCode && response.statusCode >= 400 && response.statusCode <= 599) {
-                    resolve(null);
-                }
-                const etag = (0, crypto_1.createHash)('md5').update(iconContent).digest('hex');
-                resolve({
-                    expires: response.headers['expires'] || twelveHoursFromNow().toUTCString(),
-                    lastModified: response.headers['last-modified'] || (new Date()).toUTCString(),
-                    type: response.headers['content-type'] || 'image/png',
-                    href: url,
-                    content: iconContent.toString(),
-                    etag
-                });
-            }));
-        })
-            .on('error', () => resolve(null));
-    });
-};
-class BodyStream extends stream_1.Transform {
-    _write(chunk, encoding, cb) {
-        this.push(chunk);
-        cb();
-    }
-}
+const getIcon2 = (url) => __awaiter(void 0, void 0, void 0, function* () {
+    const response = yield fetch(url);
+    const iconContent = yield response.blob();
+    const etag = (0, crypto_1.createHash)('md5').update(URL.createObjectURL(iconContent)).digest('hex');
+    const icon = {
+        expires: response.headers.get('expires') || twelveHoursFromNow().toUTCString(),
+        lastModified: response.headers.get('last-modified') || (new Date()).toUTCString(),
+        type: iconContent.type,
+        href: url,
+        content: iconContent,
+        etag
+    };
+    return icon;
+});
 const twelveHoursFromNow = () => {
     const date = new Date();
     date.setTime(date.getTime() + (1000 * 60 * 60 * 12));
     return date;
 };
-exports.default = getIcon;
+exports.default = getIcon2;
