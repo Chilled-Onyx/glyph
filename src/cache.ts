@@ -13,10 +13,11 @@ class Cache extends Map<string, Glyph.Icon> {
     const now: number = (new Date()).getTime();
     let expired: number = 0;
     console.log('Checking for cache expiration.');
+    console.log(`Current cache count: ${this.size}`);
 
     [...this].forEach((cacheEntry) => {
       const [ domain, icon ] = cacheEntry;
-      const expires          = (new Date(icon.expires)).getTime();
+      const expires          = (new Date(icon.headers.expires)).getTime();
 
       if(now > expires) {
         expired++;

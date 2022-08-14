@@ -2,15 +2,13 @@ import type Glyph from './types';
 import {createServer, ServerResponse, Server, RequestListener} from 'http';
 import Cache from './cache';
 import Request from './request';
-import getIcon from './getIcon';
+import fetchDomainIcon from './fetchDomainIcon';
 
 const cache = new Cache();
 
-const faviconRegex: RegExp = /<link[^>]+rel=.(icon|shortcut icon|alternate icon)[^>]+>/ig;
-const hrefMatch: RegExp = /href=['"]([^>]+)['"]/;
-
 const requestHandler = async (request: Glyph.Request, response: ServerResponse) => {
   request.on('ready', async () => {
+    /** This server doesn't have a favicon, and you must provide a domain to get a favicon for */
     if(request.domain === 'favicon.ico' || request.domain === '') {
       response.statusCode = 404;
       response.end();
@@ -19,45 +17,19 @@ const requestHandler = async (request: Glyph.Request, response: ServerResponse) 
 
     const cacheIcon: Glyph.Icon | undefined = cache.get(request.domain);
     if(undefined !== cacheIcon && request.allowsCache) {
-      const etagMatches: boolean = request.getHeader('if-none-match') === cacheIcon.etag;
-      const notModified: boolean = (new Date(request.getHeader('if-modified-since', Date.now().toString()))).getTime() < (new Date(cacheIcon.lastModified)).getTime();
+      const etagMatches: boolean = request.getHeader('if-none-match') === cacheIcon.headers.etag;
+      const notModified: boolean = (new Date(request.getHeader('if-modified-since', Date.now().toString()))).getTime() < (new Date(cacheIcon.headers['last-modified'])).getTime();
 
       if(etagMatches || notModified) {
         response.statusCode = 304;
         return response.end();
       }
 
-      response.writeHead(200, {
-        'content-type': cacheIcon.type,
-        'content-length': cacheIcon.content.size,
-        'expires': cacheIcon.expires,
-        'last-modified': cacheIcon.lastModified,
-        'etag': cacheIcon.etag
-      });
-      return response.end(Buffer.from(await cacheIcon.content.arrayBuffer()));
+      response.writeHead(200, cacheIcon.headers);
+      return response.end(await cacheIcon.content);
     }
 
-    let iconLocation: URL = new URL(`http://${request.domain}/favicon.ico`);
-
-    try {
-      const fetchDomain: Response = await fetch(`http://${request.domain}`);
-      const fetchDomainText: string = await fetchDomain.text();
-      let tempMatch: string[] | null = fetchDomainText.match(faviconRegex);
-
-      if(null !== tempMatch) {
-        tempMatch = tempMatch[0].match(hrefMatch);
-        if(null !== tempMatch) {
-          iconLocation = new URL(tempMatch[1], `http://${request.domain}`);
-        }
-      }
-    } catch {
-      /** Domain doesn't exist or isn't serving http **/
-      console.log('Sending 404 - 1');
-      response.statusCode = 404;
-      return response.end();
-    }
-
-    const icon: Glyph.Icon | null = await getIcon(iconLocation.href);
+    let icon: Glyph.Icon | null = await fetchDomainIcon(request.domain);
 
     if(null === icon) {
       response.statusCode = 404;
@@ -66,14 +38,8 @@ const requestHandler = async (request: Glyph.Request, response: ServerResponse) 
 
     cache.set(request.domain, icon);
 
-    response.writeHead(200, {
-      'content-type': icon.type,
-      'content-length': icon.content.size,
-      'expires': icon.expires,
-      'last-modified': icon.lastModified,
-      'etag': icon.etag
-    });
-    response.end(Buffer.from(await icon.content.arrayBuffer()));
+    response.writeHead(200, icon.headers);
+    response.end(await icon.content);
   });
 };
 

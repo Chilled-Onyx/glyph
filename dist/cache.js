@@ -9,9 +9,10 @@ class Cache extends Map {
         const now = (new Date()).getTime();
         let expired = 0;
         console.log('Checking for cache expiration.');
+        console.log(`Current cache count: ${this.size}`);
         [...this].forEach((cacheEntry) => {
             const [domain, icon] = cacheEntry;
-            const expires = (new Date(icon.expires)).getTime();
+            const expires = (new Date(icon.headers.expires)).getTime();
             if (now > expires) {
                 expired++;
                 this.delete(domain);

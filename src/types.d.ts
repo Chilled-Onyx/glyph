@@ -2,12 +2,14 @@ import type{ IncomingMessage } from 'http';
 
 declare namespace Glyph {
   type Icon = {
-    lastModified: string;
-    type: string;
-    href: string;
-    content: Blob;
-    expires: string;
-    etag: string;
+    headers: {
+      'content-type': string;
+      'content-length': number;
+      etag: string;
+      expires: string;
+      'last-modified': string;
+    };
+    content: Buffer
   };
 
   type Cache = Map<string, Glyph.Icon>;
