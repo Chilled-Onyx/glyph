@@ -1,16 +1,10 @@
 import Glyph from './types';
-import { promises as dnsPromises } from 'node:dns';
 import getIcon from './getIcon';
 
 const faviconRegex: RegExp = /<link[^>]+rel=.(icon|shortcut icon|alternate icon)[^>]+>/ig;
 const hrefMatch: RegExp = /href=['"]([^"|^>]+)['"]/;
 
 const fetchDomainIcon = async (domain: string): Promise<Glyph.Icon | null> => {
-  /** Check domain actually exists. */
-  try {
-    await dnsPromises.resolve(domain);
-  } catch {return null;}
-
   let icon: Glyph.Icon | null = null;
 
   /** Attempt to fetch favicon first */

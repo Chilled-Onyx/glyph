@@ -1,12 +1,12 @@
 import type Glyph from './types';
-import {createServer, ServerResponse, Server, RequestListener} from 'http';
+import type { ServerResponse, RequestListener } from 'node:http';
+
 import Cache from './cache';
-import Request from './request';
 import fetchDomainIcon from './fetchDomainIcon';
 
 const cache = new Cache();
 
-const requestHandler = async (request: Glyph.Request, response: ServerResponse) => {
+const requestListener = (request: Glyph.Request, response: ServerResponse) => {
   request.on('ready', async () => {
     /** This server doesn't have a favicon, and you must provide a domain to get a favicon for */
     if(request.domain === 'favicon.ico' || request.domain === '') {
@@ -43,7 +43,4 @@ const requestHandler = async (request: Glyph.Request, response: ServerResponse) 
   });
 };
 
-const server: Server = createServer({IncomingMessage: Request}, requestHandler as unknown as RequestListener);
-
-server.listen(80);
-console.log('Server started');
+export default requestListener as RequestListener;

@@ -1,48 +1,48 @@
 import type Glyph from './types';
+import config from './config';
 
 class Cache extends Map<string, Glyph.Icon> {
   protected _cacheClearInterval: NodeJS.Timer | undefined;
 
-  constructor() {
-    super();
+  constructor(iterable: Iterable<any> | undefined = undefined) {
+    super(iterable);
 
-    this.startCacheClear();
+    if(config.caching) {
+      this.startCacheClear();
+    }
   }
 
   protected _clearCache() {
     const now: number = (new Date()).getTime();
-    let expired: number = 0;
-    console.log('Checking for cache expiration.');
-    console.log(`Current cache count: ${this.size}`);
 
-    [...this].forEach((cacheEntry) => {
-      const [ domain, icon ] = cacheEntry;
-      const expires          = (new Date(icon.headers.expires)).getTime();
-
-      if(now > expires) {
-        expired++;
+    for(const [domain, icon] of this.entries()) {
+      if(now > (new Date(icon.headers.expires)).getTime()) {
         this.delete(domain);
       }
-    });
+    }
+  }
 
-    console.log(`Expired ${expired} icons.`);
+  public set(key: string, value: Glyph.Icon): this {
+    if(config.caching) {
+      super.set(key, value);
+    }
+
+    return this;
   }
 
   public startCacheClear(): this {
-    if(undefined !== this._cacheClearInterval) {
-      return this;
+    if(undefined === this._cacheClearInterval) {
+      this._cacheClearInterval = setInterval(this._clearCache.bind(this), config.cacheClearingIntervalSeconds * 1000);
     }
 
-    this._cacheClearInterval = setInterval(this._clearCache.bind(this), 1000 * 60);
     return this;
   }
 
   public stopClearCache(): this {
-    if(undefined === this._cacheClearInterval) {
-      return this;
+    if(undefined !== this._cacheClearInterval) {
+      clearInterval(this._cacheClearInterval);
     }
 
-    clearInterval(this._cacheClearInterval);
     return this;
   }
 }

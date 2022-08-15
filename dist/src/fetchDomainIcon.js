@@ -12,24 +12,16 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const node_dns_1 = require("node:dns");
 const getIcon_1 = __importDefault(require("./getIcon"));
 const faviconRegex = /<link[^>]+rel=.(icon|shortcut icon|alternate icon)[^>]+>/ig;
 const hrefMatch = /href=['"]([^"|^>]+)['"]/;
 const fetchDomainIcon = (domain) => __awaiter(void 0, void 0, void 0, function* () {
-    /** Check domain actually exists. */
-    try {
-        yield node_dns_1.promises.resolve(domain);
-    }
-    catch (_a) {
-        return null;
-    }
     let icon = null;
     /** Attempt to fetch favicon first */
     try {
         icon = yield (0, getIcon_1.default)(`https://${domain}/favicon.ico`);
     }
-    catch (_b) { }
+    catch (_a) { }
     /** Attempt to fetch site and get favicon from html */
     try {
         const fetchDomain = yield fetch(`https://${domain}`);
@@ -43,7 +35,7 @@ const fetchDomainIcon = (domain) => __awaiter(void 0, void 0, void 0, function* 
             }
         }
     }
-    catch (_c) { }
+    catch (_b) { }
     return icon;
 });
 exports.default = fetchDomainIcon;
